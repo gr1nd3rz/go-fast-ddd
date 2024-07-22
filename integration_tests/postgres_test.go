@@ -28,7 +28,7 @@ func Test_postgres(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		if err := pg.Terminate(ctx); err != nil {
+		if err = pg.Terminate(ctx); err != nil {
 			t.Fatalf("failed to terminate pgContainer: %s", err)
 		}
 	})
