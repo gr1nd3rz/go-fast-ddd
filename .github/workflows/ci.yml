@@ -36,11 +36,9 @@ jobs:
 
       # - name: Set up QEMU
       #   uses: docker/setup-qemu-action@v1
-      - name: CD
-        run: cd ./integration_tests
 
       - name: Install dependencies
-        run: go mod download
-
-      - name: Run tests
-        run: go test -v ./...
+        run: |
+          cd ./integration_tests
+          go mod download
+          go test -v .
