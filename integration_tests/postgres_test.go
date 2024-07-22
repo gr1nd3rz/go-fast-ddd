@@ -2,10 +2,11 @@ package integrationtests
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -14,30 +15,25 @@ import (
 func Test_postgres(t *testing.T) {
 	ctx := context.Background()
 
-	dbName := "users"
-	dbUser := "user"
-	dbPassword := "password"
-
-	postgresContainer, err := postgres.Run(ctx,
-		"docker.io/postgres:16-alpine",
-		// postgres.WithInitScripts(filepath.Join("testdata", "init-user-db.sh")),
-		// postgres.WithConfigFile(filepath.Join("testdata", "my-postgres.conf")),
-		postgres.WithDatabase(dbName),
-		postgres.WithUsername(dbUser),
-		postgres.WithPassword(dbPassword),
+	pg, err := postgres.Run(ctx, "postgres:15.3-alpine",
+		// postgres.WithInitScripts(filepath.Join("..", "testdata", "init-db.sql")),
+		postgres.WithDatabase("test-db"),
+		postgres.WithUsername("postgres"),
+		postgres.WithPassword("postgres"),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
-				WithOccurrence(2).
-				WithStartupTimeout(5*time.Second)),
+				WithOccurrence(2).WithStartupTimeout(60*time.Second)),
 	)
 	if err != nil {
-		log.Fatalf("failed to start container: %s", err)
+		t.Fatal(err)
 	}
-
-	// Clean up the container
-	defer func() {
-		if err := postgresContainer.Terminate(ctx); err != nil {
-			log.Fatalf("failed to terminate container: %s", err)
+	t.Cleanup(func() {
+		if err := pg.Terminate(ctx); err != nil {
+			t.Fatalf("failed to terminate pgContainer: %s", err)
 		}
-	}()
+	})
+	connStr, err := pg.ConnectionString(ctx, "sslmode=disable")
+	assert.NoError(t, err)
+	fmt.Printf("CONN: [%s]", connStr)
+
 }
