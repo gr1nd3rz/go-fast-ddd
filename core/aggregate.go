@@ -1,5 +1,7 @@
 package core
 
+import "fmt"
+
 type Aggregate[TState AggregateState] struct {
 	id      AggregateId
 	version Version
@@ -28,6 +30,16 @@ func (a *Aggregate[TState]) ProcessCommand(handler func(*TState, EventRaiser) er
 
 func (a *Aggregate[TState]) Id() AggregateId {
 	return a.id
+}
+
+func (a *Aggregate[T]) Initialize(id AggregateId, created Event) {
+	if a.version > 0 {
+		panic(fmt.Errorf("aggregate is already initialized"))
+	}
+	a.id = id
+	a.version = 0
+	a.events = make([]Event, 0)
+	a.state.Apply(created)
 }
 
 func (a *Aggregate[TState]) Store(persistFunc func(AggregateState, EventPack, Version) error) error {
