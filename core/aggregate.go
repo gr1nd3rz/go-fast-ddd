@@ -32,6 +32,10 @@ func (a *Aggregate[TState]) Id() AggregateId {
 	return a.id
 }
 
+func (a *Aggregate[T]) State() T {
+	return a.state
+}
+
 func (a *Aggregate[T]) Initialize(id AggregateId, created Event) {
 	if a.version > 0 {
 		panic(fmt.Errorf("aggregate is already initialized"))
