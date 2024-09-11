@@ -43,7 +43,7 @@ func (a *Aggregate[T]) Initialize(id AggregateId, created Event) {
 	a.id = id
 	a.version = 0
 	a.events = make([]Event, 0)
-	a.state.Apply(created)
+	a.state = a.state.Apply(created).(T)
 }
 
 func (a *Aggregate[TState]) Store(persistFunc func(AggregateState, EventPack, Version) error) error {
