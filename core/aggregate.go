@@ -16,7 +16,7 @@ func (a *Aggregate[TState]) ProcessCommand(handler func(*TState, EventRaiser) er
 	}
 	events := EventPack(make([]Event, 0))
 	apply := applier{func(event Event) {
-		a.state.Apply(event)
+		a.state = a.state.Apply(event).(TState)
 		events = append(events, event)
 	}}
 	err := handler(&a.state, apply)
