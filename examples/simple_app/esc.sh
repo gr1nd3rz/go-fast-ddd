@@ -1,0 +1,1 @@
+go build -gcflags '-m=2 -l' &> esc.txt

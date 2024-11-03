@@ -1,8 +1,6 @@
 package core
 
 import (
-	"fmt"
-
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -18,7 +16,6 @@ type applier struct {
 }
 
 func (a applier) Raise(event Event) {
-	fmt.Printf("EVENT: [%#v]\n", event)
 	a.apply(event)
 }
 

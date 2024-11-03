@@ -1,0 +1,280 @@
+# example.com/simple_app
+../../core/aggregate.go:24:7: core.(*Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).ProcessCommand capturing by value: core.a (addr=false assign=false width=8)
+../../core/aggregate.go:26:2: core.(*Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).ProcessCommand capturing by ref: core.events (addr=false assign=true width=24)
+../../core/aggregate.go:24:6: core.(*Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).ProcessCommand capturing by value: core..dict (addr=false assign=false width=8)
+../../core/aggregate.go:27:19: func literal escapes to heap:
+../../core/aggregate.go:27:19:   flow: core.apply = &{storage for func literal}:
+../../core/aggregate.go:27:19:     from func literal (spill) at ../../core/aggregate.go:27:19
+../../core/aggregate.go:27:19:     from core.applier{...} (struct literal element) at ../../core/aggregate.go:27:18
+../../core/aggregate.go:27:19:     from core.apply := core.applier{...} (assign) at ../../core/aggregate.go:27:8
+../../core/aggregate.go:27:19:   flow: {heap} = core.apply:
+../../core/aggregate.go:27:19:     from core.apply (interface-converted) at ../../core/aggregate.go:31:27
+../../core/aggregate.go:27:19:     from core.handler(&core.a.state, core.apply) (call parameter) at ../../core/aggregate.go:31:16
+../../core/aggregate.go:24:7: parameter core.a leaks to {heap} with derefs=0:
+../../core/aggregate.go:24:7:   flow: {heap} = core.a:
+../../core/aggregate.go:24:7:     from core.a.state (dot of pointer) at ../../core/aggregate.go:31:19
+../../core/aggregate.go:24:7:     from &core.a.state (address-of) at ../../core/aggregate.go:31:17
+../../core/aggregate.go:24:7:     from core.handler(&core.a.state, core.apply) (call parameter) at ../../core/aggregate.go:31:16
+../../core/aggregate.go:27:24: parameter core.event leaks to {heap} with derefs=0:
+../../core/aggregate.go:27:24:   flow: {heap} = core.event:
+../../core/aggregate.go:27:24:     from (func(go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }, core.Event) core.AggregateState)(&core..dict[0])(core.a.state, core.event) (call parameter) at ../../core/aggregate.go:28:26
+../../core/aggregate.go:24:7: parameter core.a leaks to {heap} with derefs=0:
+../../core/aggregate.go:24:7:   flow: {heap} = core.a:
+../../core/aggregate.go:24:7:     from core.a.state (dot of pointer) at ../../core/aggregate.go:31:19
+../../core/aggregate.go:24:7:     from &core.a.state (address-of) at ../../core/aggregate.go:31:17
+../../core/aggregate.go:24:7:     from core.handler(&core.a.state, core.apply) (call parameter) at ../../core/aggregate.go:31:16
+../../core/aggregate.go:24:6: parameter core..dict leaks to {storage for func literal} with derefs=0:
+../../core/aggregate.go:24:6:   flow: {storage for func literal} = core..dict:
+../../core/aggregate.go:24:6:     from core..dict (captured by a closure) at ../../core/aggregate.go:24:6
+../../core/aggregate.go:26:2: core.events escapes to heap:
+../../core/aggregate.go:26:2:   flow: {storage for func literal} = &core.events:
+../../core/aggregate.go:26:2:     from core.events (captured by a closure) at ../../core/aggregate.go:29:3
+../../core/aggregate.go:26:2:     from core.events (reference) at ../../core/aggregate.go:29:3
+../../core/aggregate.go:24:7: parameter core.a leaks to {storage for func literal} with derefs=0:
+../../core/aggregate.go:24:7:   flow: {storage for func literal} = core.a:
+../../core/aggregate.go:24:7:     from core.a (captured by a closure) at ../../core/aggregate.go:28:3
+../../core/aggregate.go:26:26: make([]core.Event, 0) escapes to heap:
+../../core/aggregate.go:26:26:   flow: core.events = &{storage for make([]core.Event, 0)}:
+../../core/aggregate.go:26:26:     from make([]core.Event, 0) (spill) at ../../core/aggregate.go:26:26
+../../core/aggregate.go:26:26:     from core.events := core.EventPack(make([]core.Event, 0)) (assign) at ../../core/aggregate.go:26:9
+../../core/aggregate.go:27:24: leaking param: event
+../../core/aggregate.go:26:2: moved to heap: core.events
+../../core/aggregate.go:26:26: make([]core.Event, 0) escapes to heap
+../../core/aggregate.go:27:19: func literal escapes to heap
+./test_agg.go:62:24: ValueUpdated{...} escapes to heap:
+./test_agg.go:62:24:   flow: {heap} = &{storage for ValueUpdated{...}}:
+./test_agg.go:62:24:     from ValueUpdated{...} (spill) at ./test_agg.go:62:24
+./test_agg.go:62:24:     from er.Raise(ValueUpdated{...}) (call parameter) at ./test_agg.go:62:11
+./test_agg.go:57:38: (*testAgg).SingleEventCommand capturing by value: val (addr=false assign=false width=16)
+./test_agg.go:58:50: parameter er leaks to {heap} with derefs=0:
+./test_agg.go:58:50:   flow: {heap} = er:
+./test_agg.go:58:50:     from er.Raise(ValueUpdated{...}) (call parameter) at ./test_agg.go:62:11
+./test_agg.go:57:7: parameter t leaks to {heap} with derefs=0:
+./test_agg.go:57:7:   flow: {heap} = t:
+./test_agg.go:57:7:     from t.Aggregate (dot of pointer) at ./test_agg.go:58:10
+./test_agg.go:57:7:     from t.Aggregate (address-of) at ./test_agg.go:58:10
+./test_agg.go:57:7:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).ProcessCommand(t.Aggregate, &core..dict.Aggregate[main.testAggState], func literal) (call parameter) at ./test_agg.go:58:25
+./test_agg.go:57:38: parameter val leaks to {storage for ValueUpdated{...}} with derefs=0:
+./test_agg.go:57:38:   flow: {storage for ValueUpdated{...}} = val:
+./test_agg.go:57:38:     from ValueUpdated{...} (struct literal element) at ./test_agg.go:62:24
+./test_agg.go:57:38:     from ValueUpdated{...} (interface-converted) at ./test_agg.go:62:24
+./test_agg.go:57:7: leaking param: t
+./test_agg.go:57:38: leaking param: val
+./test_agg.go:58:31: tas does not escape
+./test_agg.go:58:50: leaking param: er
+./test_agg.go:58:26: func literal does not escape
+./test_agg.go:62:24: ValueUpdated{...} escapes to heap
+./main.go:5:2: agg escapes to heap:
+./main.go:5:2:   flow: {heap} = &agg:
+./main.go:5:2:     from agg (address-of) at ./main.go:7:5
+./main.go:5:2:     from (*testAgg).SingleEventCommand(agg, "val") (call parameter) at ./main.go:7:24
+./main.go:5:2: moved to heap: agg
+../../core/aggregate.go:68:20: []core.Event{...} escapes to heap:
+../../core/aggregate.go:68:20:   flow: {heap} = &{storage for []core.Event{...}}:
+../../core/aggregate.go:68:20:     from []core.Event{...} (spill) at ../../core/aggregate.go:68:20
+../../core/aggregate.go:68:20:     from core.a.events = []core.Event{...} (assign) at ../../core/aggregate.go:68:11
+../../core/aggregate.go:59:51: parameter core.created leaks to {heap} with derefs=0:
+../../core/aggregate.go:59:51:   flow: {heap} = core.created:
+../../core/aggregate.go:59:51:     from (func(go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }, core.Event) core.AggregateState)(&core..dict[0])(core.a.state, core.created) (call parameter) at ../../core/aggregate.go:67:25
+../../core/aggregate.go:59:7: parameter core.a leaks to {heap} with derefs=1:
+../../core/aggregate.go:59:7:   flow: {heap} = *core.a:
+../../core/aggregate.go:59:7:     from core.a.state (dot of pointer) at ../../core/aggregate.go:67:13
+../../core/aggregate.go:59:7:     from (func(go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }, core.Event) core.AggregateState)(&core..dict[0])(core.a.state, core.created) (call parameter) at ../../core/aggregate.go:67:25
+../../core/aggregate.go:59:35: parameter core.id leaks to {heap} with derefs=0:
+../../core/aggregate.go:59:35:   flow: {heap} = core.id:
+../../core/aggregate.go:59:35:     from core.a.id = core.id (assign) at ../../core/aggregate.go:63:7
+../../core/aggregate.go:59:51: parameter core.created leaks to {storage for []core.Event{...}} with derefs=0:
+../../core/aggregate.go:59:51:   flow: {storage for []core.Event{...}} = core.created:
+../../core/aggregate.go:59:51:     from []core.Event{...} (slice-literal-element) at ../../core/aggregate.go:68:20
+../../core/aggregate.go:68:20: []core.Event{...} escapes to heap
+./test_agg.go:25:28: Created{} escapes to heap:
+./test_agg.go:25:28:   flow: {heap} = &{storage for Created{}}:
+./test_agg.go:25:28:     from Created{} (spill) at ./test_agg.go:25:28
+./test_agg.go:25:28:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).Initialize(agg.Aggregate, &core..dict.Aggregate[main.testAggState], id, Created{}) (call parameter) at ./test_agg.go:25:16
+./test_agg.go:23:17: parameter id leaks to {heap} with derefs=0:
+./test_agg.go:23:17:   flow: {heap} = id:
+./test_agg.go:23:17:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).Initialize(agg.Aggregate, &core..dict.Aggregate[main.testAggState], id, Created{}) (call parameter) at ./test_agg.go:25:16
+./test_agg.go:23:17: leaking param: id
+./test_agg.go:25:28: Created{} escapes to heap
+./test_agg.go:36:29: parameter event leaks to {heap} with derefs=0:
+./test_agg.go:36:29:   flow: {heap} = event:
+./test_agg.go:36:29:     from core.PanicUnsupportedEvent(event) (call parameter) at ./test_agg.go:44:29
+./test_agg.go:46:9: t escapes to heap:
+./test_agg.go:46:9:   flow: ~r0 = &{storage for t}:
+./test_agg.go:46:9:     from t (spill) at ./test_agg.go:46:9
+./test_agg.go:46:9:     from return t (return) at ./test_agg.go:46:2
+./test_agg.go:36:7: parameter t leaks to {storage for t} with derefs=0:
+./test_agg.go:36:7:   flow: {storage for t} = t:
+./test_agg.go:36:7:     from t (interface-converted) at ./test_agg.go:46:9
+./test_agg.go:36:29: parameter event leaks to {storage for t} with derefs=1:
+./test_agg.go:36:29:   flow: {temp} = event:
+./test_agg.go:36:29:   flow: e = *{temp}:
+./test_agg.go:36:29:     from case ValueUpdated: t.MyString = e.value (switch case) at ./test_agg.go:41:2
+./test_agg.go:36:29:   flow: t = e:
+./test_agg.go:36:29:     from e.value (dot) at ./test_agg.go:42:17
+./test_agg.go:36:29:     from t.MyString = e.value (assign) at ./test_agg.go:42:14
+./test_agg.go:36:29:   flow: {storage for t} = t:
+./test_agg.go:36:29:     from t (interface-converted) at ./test_agg.go:46:9
+./test_agg.go:39:19: make([]nestedEntity, 0) escapes to heap:
+./test_agg.go:39:19:   flow: t = &{storage for make([]nestedEntity, 0)}:
+./test_agg.go:39:19:     from make([]nestedEntity, 0) (spill) at ./test_agg.go:39:19
+./test_agg.go:39:19:     from t.MySlice = make([]nestedEntity, 0) (assign) at ./test_agg.go:39:13
+./test_agg.go:39:19:   flow: {storage for t} = t:
+./test_agg.go:39:19:     from t (interface-converted) at ./test_agg.go:46:9
+./test_agg.go:36:7: leaking param: t
+./test_agg.go:36:29: leaking param: event
+./test_agg.go:39:19: make([]nestedEntity, 0) escapes to heap
+./test_agg.go:46:9: t escapes to heap
+./test_agg.go:69:24: ValueUpdated{...} escapes to heap:
+./test_agg.go:69:24:   flow: {heap} = &{storage for ValueUpdated{...}}:
+./test_agg.go:69:24:     from ValueUpdated{...} (spill) at ./test_agg.go:69:24
+./test_agg.go:69:24:     from er.Raise(ValueUpdated{...}) (call parameter) at ./test_agg.go:69:11
+./test_agg.go:73:24: ValueUpdated{...} escapes to heap:
+./test_agg.go:73:24:   flow: {heap} = &{storage for ValueUpdated{...}}:
+./test_agg.go:73:24:     from ValueUpdated{...} (spill) at ./test_agg.go:73:24
+./test_agg.go:73:24:     from er.Raise(ValueUpdated{...}) (call parameter) at ./test_agg.go:73:11
+./test_agg.go:67:41: (*testAgg).MultipleEventsCommand capturing by value: val (addr=false assign=false width=16)
+./test_agg.go:68:50: parameter er leaks to {heap} with derefs=0:
+./test_agg.go:68:50:   flow: {heap} = er:
+./test_agg.go:68:50:     from er.Raise(ValueUpdated{...}) (call parameter) at ./test_agg.go:69:11
+./test_agg.go:67:7: parameter t leaks to {heap} with derefs=0:
+./test_agg.go:67:7:   flow: {heap} = t:
+./test_agg.go:67:7:     from t.Aggregate (dot of pointer) at ./test_agg.go:68:10
+./test_agg.go:67:7:     from t.Aggregate (address-of) at ./test_agg.go:68:10
+./test_agg.go:67:7:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).ProcessCommand(t.Aggregate, &core..dict.Aggregate[main.testAggState], func literal) (call parameter) at ./test_agg.go:68:25
+./test_agg.go:67:41: parameter val leaks to {storage for ValueUpdated{...}} with derefs=0:
+./test_agg.go:67:41:   flow: {storage for ValueUpdated{...}} = val:
+./test_agg.go:67:41:     from ValueUpdated{...} (struct literal element) at ./test_agg.go:73:24
+./test_agg.go:67:41:     from ValueUpdated{...} (interface-converted) at ./test_agg.go:73:24
+./test_agg.go:67:41: parameter val leaks to {storage for ValueUpdated{...}} with derefs=0:
+./test_agg.go:67:41:   flow: {storage for ValueUpdated{...}} = val:
+./test_agg.go:67:41:     from ValueUpdated{...} (struct literal element) at ./test_agg.go:69:24
+./test_agg.go:67:41:     from ValueUpdated{...} (interface-converted) at ./test_agg.go:69:24
+./test_agg.go:67:7: leaking param: t
+./test_agg.go:67:41: leaking param: val
+./test_agg.go:68:31: tas does not escape
+./test_agg.go:68:50: leaking param: er
+./test_agg.go:68:26: func literal does not escape
+./test_agg.go:69:24: ValueUpdated{...} escapes to heap
+./test_agg.go:73:24: ValueUpdated{...} escapes to heap
+../../core/aggregate.go:91:7: parameter core.a leaks to core.~r0 with derefs=1:
+../../core/aggregate.go:91:7:   flow: core.~r0 = *core.a:
+../../core/aggregate.go:91:7:     from core.a.err (dot of pointer) at ../../core/aggregate.go:92:10
+../../core/aggregate.go:91:7:     from return core.a.err (return) at ../../core/aggregate.go:92:2
+../../core/aggregate.go:83:53: parameter core.state leaks to {heap} with derefs=1:
+../../core/aggregate.go:83:53:   flow: {heap} = *core.state:
+../../core/aggregate.go:83:53:     from <node DYNAMICDOTTYPE> (dot) at ../../core/aggregate.go:85:17
+../../core/aggregate.go:83:53:     from core.a.state = <node DYNAMICDOTTYPE> (assign) at ../../core/aggregate.go:85:10
+../../core/aggregate.go:83:37: parameter core.id leaks to {heap} with derefs=0:
+../../core/aggregate.go:83:37:   flow: {heap} = core.id:
+../../core/aggregate.go:83:37:     from core.a.id = core.id (assign) at ../../core/aggregate.go:84:7
+../../core/aggregate.go:74:22: core.a.state escapes to heap:
+../../core/aggregate.go:74:22:   flow: {heap} = &{storage for core.a.state}:
+../../core/aggregate.go:74:22:     from core.a.state (spill) at ../../core/aggregate.go:74:22
+../../core/aggregate.go:74:22:     from core.persistFunc(core.a.state, core.a.events, core.a.version) (call parameter) at ../../core/aggregate.go:74:20
+../../core/aggregate.go:72:7: parameter core.a leaks to {heap} with derefs=1:
+../../core/aggregate.go:72:7:   flow: {heap} = *core.a:
+../../core/aggregate.go:72:7:     from core.a.events (dot of pointer) at ../../core/aggregate.go:74:31
+../../core/aggregate.go:72:7:     from core.persistFunc(core.a.state, core.a.events, core.a.version) (call parameter) at ../../core/aggregate.go:74:20
+../../core/aggregate.go:72:7: parameter core.a leaks to {storage for core.a.state} with derefs=1:
+../../core/aggregate.go:72:7:   flow: {storage for core.a.state} = *core.a:
+../../core/aggregate.go:72:7:     from core.a.state (dot of pointer) at ../../core/aggregate.go:74:22
+../../core/aggregate.go:72:7:     from core.a.state (interface-converted) at ../../core/aggregate.go:74:22
+../../core/aggregate.go:74:22: core.a.state escapes to heap
+../../core/aggregate.go:50:7: parameter core.a leaks to core.~r0 with derefs=1:
+../../core/aggregate.go:50:7:   flow: core.~r0 = *core.a:
+../../core/aggregate.go:50:7:     from core.a.state (dot of pointer) at ../../core/aggregate.go:52:10
+../../core/aggregate.go:50:7:     from return core.a.state (return) at ../../core/aggregate.go:52:2
+../../core/aggregate.go:45:7: parameter core.a leaks to core.~r0 with derefs=1:
+../../core/aggregate.go:45:7:   flow: core.~r0 = *core.a:
+../../core/aggregate.go:45:7:     from core.a.id (dot of pointer) at ../../core/aggregate.go:47:10
+../../core/aggregate.go:45:7:     from return core.a.id (return) at ../../core/aggregate.go:47:2
+../../core/aggregate.go:91:7: parameter core.a leaks to core.~r0 with derefs=1:
+../../core/aggregate.go:91:7:   flow: core.~r0 = *core.a:
+../../core/aggregate.go:91:7:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).Error(core.a, &core..dict.Aggregate[main.testAggState]) (call parameter) at ../../core/aggregate.go:91:6
+../../core/aggregate.go:91:7:     from return (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).Error(core.a, &core..dict.Aggregate[main.testAggState]) (return) at ../../core/aggregate.go:91:6
+../../core/aggregate.go:83:53: parameter core.state leaks to {heap} with derefs=1:
+../../core/aggregate.go:83:53:   flow: {heap} = *core.state:
+../../core/aggregate.go:83:53:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).Restore(core.a, &core..dict.Aggregate[main.testAggState], core.id, core.state, core.version) (call parameter) at ../../core/aggregate.go:83:6
+../../core/aggregate.go:83:37: parameter core.id leaks to {heap} with derefs=0:
+../../core/aggregate.go:83:37:   flow: {heap} = core.id:
+../../core/aggregate.go:83:37:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).Restore(core.a, &core..dict.Aggregate[main.testAggState], core.id, core.state, core.version) (call parameter) at ../../core/aggregate.go:83:6
+../../core/aggregate.go:72:7: parameter core.a leaks to {heap} with derefs=1:
+../../core/aggregate.go:72:7:   flow: {temp} = core.a:
+../../core/aggregate.go:72:7:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).Store(core.a, &core..dict.Aggregate[main.testAggState], core.persistFunc) (call parameter) at ../../core/aggregate.go:72:6
+../../core/aggregate.go:72:7:   flow: {heap} = *{temp}:
+../../core/aggregate.go:59:51: parameter core.created leaks to {heap} with derefs=0:
+../../core/aggregate.go:59:51:   flow: {heap} = core.created:
+../../core/aggregate.go:59:51:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).Initialize(core.a, &core..dict.Aggregate[main.testAggState], core.id, core.created) (call parameter) at ../../core/aggregate.go:59:6
+../../core/aggregate.go:59:35: parameter core.id leaks to {heap} with derefs=0:
+../../core/aggregate.go:59:35:   flow: {heap} = core.id:
+../../core/aggregate.go:59:35:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).Initialize(core.a, &core..dict.Aggregate[main.testAggState], core.id, core.created) (call parameter) at ../../core/aggregate.go:59:6
+../../core/aggregate.go:59:7: parameter core.a leaks to {heap} with derefs=1:
+../../core/aggregate.go:59:7:   flow: {temp} = core.a:
+../../core/aggregate.go:59:7:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).Initialize(core.a, &core..dict.Aggregate[main.testAggState], core.id, core.created) (call parameter) at ../../core/aggregate.go:59:6
+../../core/aggregate.go:59:7:   flow: {heap} = *{temp}:
+../../core/aggregate.go:50:7: parameter core.a leaks to core.~r0 with derefs=1:
+../../core/aggregate.go:50:7:   flow: core.~r0 = *core.a:
+../../core/aggregate.go:50:7:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).State(core.a, &core..dict.Aggregate[main.testAggState]) (call parameter) at ../../core/aggregate.go:50:6
+../../core/aggregate.go:50:7:     from return (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).State(core.a, &core..dict.Aggregate[main.testAggState]) (return) at ../../core/aggregate.go:50:6
+../../core/aggregate.go:45:7: parameter core.a leaks to core.~r0 with derefs=1:
+../../core/aggregate.go:45:7:   flow: core.~r0 = *core.a:
+../../core/aggregate.go:45:7:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).Id(core.a, &core..dict.Aggregate[main.testAggState]) (call parameter) at ../../core/aggregate.go:45:6
+../../core/aggregate.go:45:7:     from return (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).Id(core.a, &core..dict.Aggregate[main.testAggState]) (return) at ../../core/aggregate.go:45:6
+../../core/aggregate.go:24:7: parameter core.a leaks to {heap} with derefs=0:
+../../core/aggregate.go:24:7:   flow: {heap} = core.a:
+../../core/aggregate.go:24:7:     from (*core.Aggregate[go.shape.struct { MyString string; MySlice []main.nestedEntity; MyMap map[string]main.nestedEntity }]).ProcessCommand(core.a, &core..dict.Aggregate[main.testAggState], core.handler) (call parameter) at ../../core/aggregate.go:24:6
+./test_agg.go:36:29: parameter event leaks to {heap} with derefs=0:
+./test_agg.go:36:29:   flow: {heap} = event:
+./test_agg.go:36:29:     from testAggState.Apply(t, event) (call parameter) at <autogenerated>:1
+./test_agg.go:36:7: parameter t leaks to {heap} with derefs=1:
+./test_agg.go:36:7:   flow: {heap} = *t:
+./test_agg.go:36:7:     from t (indirection) at <autogenerated>:1
+./test_agg.go:36:7:     from testAggState.Apply(t, event) (call parameter) at <autogenerated>:1
+../../core/aggregate.go:91:7: parameter core.a leaks to ~r0 with derefs=1:
+../../core/aggregate.go:91:7:   flow: ~r0 = *core.a:
+../../core/aggregate.go:91:7:     from core.a.Aggregate (dot of pointer) at <autogenerated>:1
+../../core/aggregate.go:91:7:     from core.a.Aggregate (address-of) at <autogenerated>:1
+../../core/aggregate.go:91:7:     from (*core.Aggregate[main.testAggState]).Error(core.a.Aggregate) (call parameter) at <autogenerated>:1
+../../core/aggregate.go:91:7:     from return (*core.Aggregate[main.testAggState]).Error(core.a.Aggregate) (return) at <autogenerated>:1
+../../core/aggregate.go:45:7: parameter core.a leaks to ~r0 with derefs=1:
+../../core/aggregate.go:45:7:   flow: ~r0 = *core.a:
+../../core/aggregate.go:45:7:     from core.a.Aggregate (dot of pointer) at <autogenerated>:1
+../../core/aggregate.go:45:7:     from core.a.Aggregate (address-of) at <autogenerated>:1
+../../core/aggregate.go:45:7:     from (*core.Aggregate[main.testAggState]).Id(core.a.Aggregate) (call parameter) at <autogenerated>:1
+../../core/aggregate.go:45:7:     from return (*core.Aggregate[main.testAggState]).Id(core.a.Aggregate) (return) at <autogenerated>:1
+../../core/aggregate.go:59:51: parameter core.created leaks to {heap} with derefs=0:
+../../core/aggregate.go:59:51:   flow: {heap} = core.created:
+../../core/aggregate.go:59:51:     from (*core.Aggregate[main.testAggState]).Initialize(core.a.Aggregate, core.id, core.created) (call parameter) at <autogenerated>:1
+../../core/aggregate.go:59:35: parameter core.id leaks to {heap} with derefs=0:
+../../core/aggregate.go:59:35:   flow: {heap} = core.id:
+../../core/aggregate.go:59:35:     from (*core.Aggregate[main.testAggState]).Initialize(core.a.Aggregate, core.id, core.created) (call parameter) at <autogenerated>:1
+../../core/aggregate.go:59:7: parameter core.a leaks to {heap} with derefs=1:
+../../core/aggregate.go:59:7:   flow: {temp} = core.a:
+../../core/aggregate.go:59:7:     from core.a.Aggregate (dot of pointer) at <autogenerated>:1
+../../core/aggregate.go:59:7:     from core.a.Aggregate (address-of) at <autogenerated>:1
+../../core/aggregate.go:59:7:     from (*core.Aggregate[main.testAggState]).Initialize(core.a.Aggregate, core.id, core.created) (call parameter) at <autogenerated>:1
+../../core/aggregate.go:59:7:   flow: {heap} = *{temp}:
+../../core/aggregate.go:24:7: parameter core.a leaks to {heap} with derefs=0:
+../../core/aggregate.go:24:7:   flow: {heap} = core.a:
+../../core/aggregate.go:24:7:     from core.a.Aggregate (dot of pointer) at <autogenerated>:1
+../../core/aggregate.go:24:7:     from core.a.Aggregate (address-of) at <autogenerated>:1
+../../core/aggregate.go:24:7:     from (*core.Aggregate[main.testAggState]).ProcessCommand(core.a.Aggregate, core.handler) (call parameter) at <autogenerated>:1
+../../core/aggregate.go:83:53: parameter core.state leaks to {heap} with derefs=1:
+../../core/aggregate.go:83:53:   flow: {heap} = *core.state:
+../../core/aggregate.go:83:53:     from (*core.Aggregate[main.testAggState]).Restore(core.a.Aggregate, core.id, core.state, core.version) (call parameter) at <autogenerated>:1
+../../core/aggregate.go:83:37: parameter core.id leaks to {heap} with derefs=0:
+../../core/aggregate.go:83:37:   flow: {heap} = core.id:
+../../core/aggregate.go:83:37:     from (*core.Aggregate[main.testAggState]).Restore(core.a.Aggregate, core.id, core.state, core.version) (call parameter) at <autogenerated>:1
+../../core/aggregate.go:50:7: parameter core.a leaks to ~r0 with derefs=1:
+../../core/aggregate.go:50:7:   flow: ~r0 = *core.a:
+../../core/aggregate.go:50:7:     from core.a.Aggregate (dot of pointer) at <autogenerated>:1
+../../core/aggregate.go:50:7:     from core.a.Aggregate (address-of) at <autogenerated>:1
+../../core/aggregate.go:50:7:     from (*core.Aggregate[main.testAggState]).State(core.a.Aggregate) (call parameter) at <autogenerated>:1
+../../core/aggregate.go:50:7:     from return (*core.Aggregate[main.testAggState]).State(core.a.Aggregate) (return) at <autogenerated>:1
+../../core/aggregate.go:72:7: parameter core.a leaks to {heap} with derefs=1:
+../../core/aggregate.go:72:7:   flow: {temp} = core.a:
+../../core/aggregate.go:72:7:     from core.a.Aggregate (dot of pointer) at <autogenerated>:1
+../../core/aggregate.go:72:7:     from core.a.Aggregate (address-of) at <autogenerated>:1
+../../core/aggregate.go:72:7:     from (*core.Aggregate[main.testAggState]).Store(core.a.Aggregate, core.persistFunc) (call parameter) at <autogenerated>:1
+../../core/aggregate.go:72:7:   flow: {heap} = *{temp}:

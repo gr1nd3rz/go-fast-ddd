@@ -1,19 +1,28 @@
 package core
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
+
+var ErrAggregateHasError = errors.New("aggregate has error")
 
 type Aggregate[TState AggregateState] struct {
 	id      AggregateId
 	version Version
-	events  []Event
+	events  EventPack
 	state   TState
 	err     error
 }
 
-func (a *Aggregate[TState]) ProcessCommand(handler func(*TState, EventRaiser) error) (EventPack, error) {
+func (a *Aggregate[TState]) checkError() {
 	if a.err != nil {
 		panic(ErrAggregateHasError)
 	}
+}
+
+func (a *Aggregate[TState]) ProcessCommand(handler func(*TState, EventRaiser) error) (EventPack, error) {
+	a.checkError()
 	events := EventPack(make([]Event, 0))
 	apply := applier{func(event Event) {
 		a.state = a.state.Apply(event).(TState)
@@ -23,17 +32,28 @@ func (a *Aggregate[TState]) ProcessCommand(handler func(*TState, EventRaiser) er
 	if err == nil {
 		return events, nil
 	}
+	// If an error occur after command has spawned any events
+	// then the  aggregate is considered in corrupted state and can't be used anymore
+	if IsEmpty(events) {
+		return nil, err
+	}
 	a.err = err
 	a.events = nil
 	return nil, err
 }
 
 func (a *Aggregate[TState]) Id() AggregateId {
+	a.checkError()
 	return a.id
 }
 
 func (a *Aggregate[T]) State() T {
+	a.checkError()
 	return a.state
+}
+
+func PanicUnsupportedEvent(event Event) error {
+	panic(fmt.Sprintf("unsupported event %T", event))
 }
 
 func (a *Aggregate[T]) Initialize(id AggregateId, created Event) {
@@ -42,14 +62,15 @@ func (a *Aggregate[T]) Initialize(id AggregateId, created Event) {
 	}
 	a.id = id
 	a.version = 0
-	a.events = make([]Event, 0)
+	var empty T
+	a.state = empty
 	a.state = a.state.Apply(created).(T)
+	a.events = []Event{created}
+	a.err = nil
 }
 
 func (a *Aggregate[TState]) Store(persistFunc func(AggregateState, EventPack, Version) error) error {
-	if a.err != nil {
-		panic(ErrAggregateHasError)
-	}
+	a.checkError()
 	err := persistFunc(a.state, a.events, a.version)
 	if err != nil {
 		return err
@@ -67,8 +88,19 @@ func (a *Aggregate[TState]) Restore(id AggregateId, state AggregateState, versio
 	a.err = nil
 }
 
+func (a *Aggregate[TState]) Error() error {
+	return a.err
+}
+
+func (a *Aggregate[TState]) Version() Version {
+	a.checkError()
+	return a.version
+}
+
 type IAggregate interface {
 	Id() AggregateId
+	Version() Version
+	Error() error
 	Store(persistFunc func(AggregateState, EventPack, Version) error) error
 	Restore(id AggregateId, state AggregateState, version Version)
 }
