@@ -16,38 +16,6 @@ type Applier interface {
 	Apply(event Event)
 }
 
-var (
-	ErrNoEvents      = errors.New("no events")
-	ErrTooManyEvents = errors.New("too many events")
-)
-
-func EventOfType[T any](pack EventPack) (T, error) {
-	e := EventsOfType[T](pack)
-	var evt T
-	if len(e) == 0 {
-		return evt, ErrNoEvents
-	} else if len(e) > 1 {
-		return evt, ErrTooManyEvents
-	} else {
-		return e[0], nil
-	}
-}
-
-func EventsOfType[T any](pack EventPack) []T {
-	res := make([]T, 0)
-	for _, e := range pack {
-		switch evt := e.(type) {
-		case T:
-			res = append(res, evt)
-		}
-	}
-	return res
-}
-
-func IsEmpty(pack EventPack) bool {
-	return len(pack) == 0
-}
-
 var ErrAggregateHasError = errors.New("aggregate has error")
 
 type Aggregate[T any] struct {
@@ -56,6 +24,7 @@ type Aggregate[T any] struct {
 	events  EventPack
 	state   T
 	err     error
+	riser   riser[T]
 }
 
 func (a *Aggregate[T]) checkError() {
@@ -64,15 +33,17 @@ func (a *Aggregate[T]) checkError() {
 	}
 }
 
-func (a *Aggregate[T]) Raise(event Event) {
+func (a *Aggregate[T]) raise(event Event) {
+	a.checkError()
 	any(&a.state).(Applier).Apply(event)
 	a.events = append(a.events, event)
 }
 
-func (a *Aggregate[T]) ProcessCommand(handler func() error) (EventPack, error) {
+func (a *Aggregate[T]) ProcessCommand(handler func(state *T, er EventRiser) error) (EventPack, error) {
 	a.checkError()
 	eventsCount := len(a.events)
-	err := handler()
+	a.riser = riser[T]{a}
+	err := handler(&a.state, &a.riser)
 	if err == nil {
 		return a.events[eventsCount:], nil
 	}
@@ -96,10 +67,6 @@ func (a *Aggregate[T]) State() *T {
 	return &a.state
 }
 
-func PanicUnsupportedEvent(event Event) error {
-	panic(fmt.Sprintf("unsupported event %T", event))
-}
-
 func (a *Aggregate[T]) Initialize(id AggregateId, created Event) {
 	if a.version > 0 {
 		panic(fmt.Errorf("aggregate is already initialized"))
@@ -110,7 +77,40 @@ func (a *Aggregate[T]) Initialize(id AggregateId, created Event) {
 	a.state = state
 	a.events = nil
 	a.err = nil
-	a.Raise(created)
+	a.raise(created)
+}
+
+type EventRiser interface {
+	Raise(event Event)
+	RaisePack(pack EventPack)
+	RaiseNotEqual(first any, second any, event Event)
+	RaiseTrue(predicate bool, event Event)
+}
+
+type riser[T any] struct {
+	a *Aggregate[T]
+}
+
+func (r *riser[T]) Raise(event Event) {
+	r.a.raise(event)
+}
+
+func (r *riser[T]) RaisePack(pack EventPack) {
+	for _, e := range pack {
+		r.Raise(e)
+	}
+}
+
+func (r *riser[T]) RaiseNotEqual(first any, second any, event Event) {
+	if !cmp.Equal(first, second) {
+		r.Raise(event)
+	}
+}
+
+func (r *riser[T]) RaiseTrue(predicate bool, event Event) {
+	if predicate {
+		r.Raise(event)
+	}
 }
 
 func (a *Aggregate[T]) Store(persistFunc func(any, EventPack, Version) error) error {
@@ -142,32 +142,46 @@ func (a *Aggregate[TState]) Version() Version {
 	return a.version
 }
 
-type IAggregate[TState any] interface {
-	Id() AggregateId
-	Version() Version
-	Error() error
-	Store(persistFunc func(Applier, EventPack, Version) error) error
-	Restore(id AggregateId, state Applier, version Version)
+// type IAggregate[TState any] interface {
+// 	Id() AggregateId
+// 	Version() Version
+// 	Error() error
+// 	Store(persistFunc func(Applier, EventPack, Version) error) error
+// 	Restore(id AggregateId, state Applier, version Version)
+// }
+
+func PanicUnsupportedEvent(event Event) error {
+	panic(fmt.Sprintf("unsupported event %T", event))
 }
 
-type EventRiser interface {
-	Raise(event Event)
+var (
+	ErrNoEvents      = errors.New("no events")
+	ErrTooManyEvents = errors.New("too many events")
+)
+
+func EventOfType[T any](pack EventPack) (T, error) {
+	e := EventsOfType[T](pack)
+	var evt T
+	if len(e) == 0 {
+		return evt, ErrNoEvents
+	} else if len(e) > 1 {
+		return evt, ErrTooManyEvents
+	} else {
+		return e[0], nil
+	}
 }
 
-func RaisePack(er EventRiser, pack EventPack) {
+func EventsOfType[T any](pack EventPack) []T {
+	res := make([]T, 0)
 	for _, e := range pack {
-		er.Raise(e)
+		switch evt := e.(type) {
+		case T:
+			res = append(res, evt)
+		}
 	}
+	return res
 }
 
-func RaiseNotEqual(er EventRiser, first any, second any, event Event) {
-	if !cmp.Equal(first, second) {
-		er.Raise(event)
-	}
-}
-
-func RaiseTrue(er EventRiser, predicate bool, event Event) {
-	if predicate {
-		er.Raise(event)
-	}
+func IsEmpty(pack EventPack) bool {
+	return len(pack) == 0
 }
