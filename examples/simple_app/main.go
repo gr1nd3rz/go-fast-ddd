@@ -2,9 +2,9 @@ package main
 
 func main() {
 	// repo := testRepository{}
-	agg := testAgg{}
+	// agg := testAgg{}
 	// repo.Load(context.TODO(), "id", &agg)
-	agg.SingleEventCommand("val")
+	// agg.SingleEventCommand("val")
 	// agg.Store(func(as core.AggregateState, ep core.EventPack, v core.Version) error {
 	// 	return nil
 	// })

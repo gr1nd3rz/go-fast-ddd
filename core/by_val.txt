@@ -1,6 +1,0 @@
-goos: darwin
-goarch: arm64
-pkg: github.com/gr1nd3rz/go-fast-ddd/core
-BenchmarkAggregate-11    	13051081	        89.31 ns/op	     136 B/op	       5 allocs/op
-PASS
-ok  	github.com/gr1nd3rz/go-fast-ddd/core	2.834s
