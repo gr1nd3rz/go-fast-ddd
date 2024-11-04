@@ -96,7 +96,7 @@ func TestAggregate(t *testing.T) {
 		newId := Id("new-id")
 		agg.Initialize(newId, Created{})
 
-		require.Equal(t, Version(0), agg.Version())
+		require.Equal(t, Version(0), agg.version)
 		require.Equal(t, 1, len(agg.events))
 		require.Equal(t, testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}, agg.state)
 		require.Nil(t, agg.Error())
@@ -163,7 +163,7 @@ func TestAggregate(t *testing.T) {
 		require.Equal(t, EventPack{Created{}}, pEventPack)
 		require.Equal(t, Version(0), pVersion)
 		require.Empty(t, agg.events)
-		require.Equal(t, Version(1), agg.Version())
+		require.Equal(t, Version(1), agg.version)
 		require.Equal(t, testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}, agg.State())
 	})
 
@@ -179,7 +179,7 @@ func TestAggregate(t *testing.T) {
 		require.Error(t, err)
 		require.Equal(t, testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}, agg.State())
 		require.Equal(t, EventPack{Created{}}, agg.events)
-		require.Equal(t, Version(0), agg.Version())
+		require.Equal(t, Version(0), agg.version)
 	})
 
 	t.Run(`Given an empty aggregate
@@ -192,7 +192,7 @@ func TestAggregate(t *testing.T) {
 		agg.Restore(id, state, Version(100))
 		require.Equal(t, state, agg.State())
 		require.Empty(t, agg.events)
-		require.Equal(t, Version(100), agg.Version())
+		require.Equal(t, Version(100), agg.version)
 	})
 
 	t.Run(`Given a newly created aggregate
@@ -209,7 +209,7 @@ func TestAggregate(t *testing.T) {
 		require.Equal(t, id, agg.Id())
 		require.Equal(t, state, agg.State())
 		require.Empty(t, agg.events)
-		require.Equal(t, Version(100), agg.Version())
+		require.Equal(t, Version(100), agg.version)
 		require.NoError(t, agg.Error())
 	})
 }

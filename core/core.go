@@ -8,9 +8,8 @@ import (
 )
 
 var (
-	ErrNoEvents          = errors.New("no events")
-	ErrTooManyEvents     = errors.New("too many events")
-	ErrAggregateHasError = errors.New("aggregate has error")
+	ErrNoEvents      = errors.New("no events")
+	ErrTooManyEvents = errors.New("too many events")
 )
 
 type (
@@ -76,7 +75,7 @@ type Aggregate[T any] struct {
 
 func (a *Aggregate[T]) checkError() {
 	if a.err != nil {
-		panic(ErrAggregateHasError)
+		panic("aggregate state corrupted")
 	}
 }
 
@@ -139,8 +138,7 @@ func (a *Aggregate[T]) Store(persistFunc func(Id, any, EventPack, Version) error
 
 func (a *Aggregate[TState]) Restore(id Id, state any, version Version) {
 	a.id = id
-	s := state.(TState)
-	a.state = s
+	a.state = state.(TState)
 	a.version = version
 	a.events = nil
 	a.err = nil
@@ -148,11 +146,6 @@ func (a *Aggregate[TState]) Restore(id Id, state any, version Version) {
 
 func (a *Aggregate[TState]) Error() error {
 	return a.err
-}
-
-func (a *Aggregate[TState]) Version() Version {
-	a.checkError()
-	return a.version
 }
 
 func PanicUnsupportedEvent(event Event) error {
