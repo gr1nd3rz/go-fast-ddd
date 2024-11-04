@@ -167,6 +167,21 @@ func TestAggregate(t *testing.T) {
 		require.Equal(t, testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}, agg.State())
 	})
 
+	t.Run(`Given an aggregate without events 
+		When Store is called
+		Then persistFunc shouldn't be called
+		And aggregate version shouldn'be be changed
+	`, func(t *testing.T) {
+		agg := testAgg{}
+		persistFuncCalled := false
+		agg.Store(func(id Id, as any, ep EventPack, v Version) error {
+			persistFuncCalled = true
+			return nil
+		})
+		require.False(t, persistFuncCalled)
+		require.Equal(t, Version(0), agg.version)
+	})
+
 	t.Run(`Given a newly created aggregate
 		When Store is called
 		And persistFunc returns an error

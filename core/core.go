@@ -127,6 +127,9 @@ func (a *Aggregate[T]) Initialize(id Id, created Event) {
 
 func (a *Aggregate[T]) Store(persistFunc func(Id, any, EventPack, Version) error) error {
 	a.checkError()
+	if len(a.events) == 0 {
+		return nil
+	}
 	err := persistFunc(a.id, a.state, a.events, a.version)
 	if err != nil {
 		return err
