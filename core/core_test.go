@@ -7,7 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var _ Applier = &testAggState{}
+var _ EventApplier = &testAggState{}
+var _ Storer = &testAgg{}
+var _ Restorer = &testAgg{}
 
 type nestedEntity struct {
 	MyString string
@@ -21,7 +23,7 @@ type testAggState struct {
 	MyMap    map[string]nestedEntity
 }
 
-func newTestAgg(id AggregateId) testAgg {
+func newTestAgg(id Id) testAgg {
 	agg := testAgg{}
 	agg.Initialize(id, Created{})
 	return agg
@@ -91,7 +93,7 @@ func TestAggregate(t *testing.T) {
 		agg.events = append(agg.events, ValueUpdated{"val"})
 		agg.err = errors.New("error")
 
-		newId := AggregateId("new-id")
+		newId := Id("new-id")
 		agg.Initialize(newId, Created{})
 
 		require.Equal(t, Version(0), agg.Version())
@@ -150,7 +152,7 @@ func TestAggregate(t *testing.T) {
 		var pState any
 		var pEventPack EventPack
 		var pVersion Version
-		err := agg.Store(func(as any, ep EventPack, v Version) error {
+		err := agg.Store(func(id Id, as any, ep EventPack, v Version) error {
 			pState = as
 			pEventPack = ep
 			pVersion = v
@@ -162,7 +164,7 @@ func TestAggregate(t *testing.T) {
 		require.Equal(t, Version(0), pVersion)
 		require.Empty(t, agg.events)
 		require.Equal(t, Version(1), agg.Version())
-		require.Equal(t, testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}, *agg.State())
+		require.Equal(t, testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}, agg.State())
 	})
 
 	t.Run(`Given a newly created aggregate
@@ -171,11 +173,11 @@ func TestAggregate(t *testing.T) {
 		Then aggreate's state shouldn't be changed
 	`, func(t *testing.T) {
 		agg := newTestAgg("id")
-		err := agg.Store(func(as any, ep EventPack, v Version) error {
+		err := agg.Store(func(id Id, as any, ep EventPack, v Version) error {
 			return errors.New("error")
 		})
 		require.Error(t, err)
-		require.Equal(t, testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}, *agg.State())
+		require.Equal(t, testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}, agg.State())
 		require.Equal(t, EventPack{Created{}}, agg.events)
 		require.Equal(t, Version(0), agg.Version())
 	})
@@ -185,10 +187,10 @@ func TestAggregate(t *testing.T) {
 		Then aggreate's state is restored from parmas of Restore
 	`, func(t *testing.T) {
 		agg := testAgg{}
-		id := AggregateId("id")
+		id := Id("id")
 		state := testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}
 		agg.Restore(id, state, Version(100))
-		require.Equal(t, state, *agg.State())
+		require.Equal(t, state, agg.State())
 		require.Empty(t, agg.events)
 		require.Equal(t, Version(100), agg.Version())
 	})
@@ -199,13 +201,13 @@ func TestAggregate(t *testing.T) {
 		Then aggreate's state is restored from parmas of Restore
 		And Error is set to nil
 	`, func(t *testing.T) {
-		id := AggregateId("id")
+		id := Id("id")
 		agg := newTestAgg("id2")
 		agg.err = errors.New("error")
 		state := testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}
 		agg.Restore(id, state, Version(100))
 		require.Equal(t, id, agg.Id())
-		require.Equal(t, state, *agg.State())
+		require.Equal(t, state, agg.State())
 		require.Empty(t, agg.events)
 		require.Equal(t, Version(100), agg.Version())
 		require.NoError(t, agg.Error())
