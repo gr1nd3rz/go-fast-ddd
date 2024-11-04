@@ -3,7 +3,8 @@ package core
 import (
 	"errors"
 	"fmt"
-	"reflect"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 type Event any
@@ -11,7 +12,7 @@ type EventPack []Event
 type AggregateId string
 type Version uint64
 
-type AggregateState[TState any] interface {
+type Applier interface {
 	Apply(event Event)
 }
 
@@ -49,7 +50,7 @@ func IsEmpty(pack EventPack) bool {
 
 var ErrAggregateHasError = errors.New("aggregate has error")
 
-type Aggregate[T AggregateState[T]] struct {
+type Aggregate[T any] struct {
 	id      AggregateId
 	version Version
 	events  EventPack
@@ -64,7 +65,7 @@ func (a *Aggregate[T]) checkError() {
 }
 
 func (a *Aggregate[T]) Raise(event Event) {
-	a.state.Apply(event)
+	any(&a.state).(Applier).Apply(event)
 	a.events = append(a.events, event)
 }
 
@@ -90,9 +91,9 @@ func (a *Aggregate[T]) Id() AggregateId {
 	return a.id
 }
 
-func (a *Aggregate[T]) State() T {
+func (a *Aggregate[T]) State() *T {
 	a.checkError()
-	return a.state
+	return &a.state
 }
 
 func PanicUnsupportedEvent(event Event) error {
@@ -105,13 +106,14 @@ func (a *Aggregate[T]) Initialize(id AggregateId, created Event) {
 	}
 	a.id = id
 	a.version = 0
-	a.state = reflect.New(reflect.TypeOf(a.state).Elem()).Interface().(T)
-	a.state.Apply(created)
-	a.events = []Event{created}
+	var state T
+	a.state = state
+	a.events = nil
 	a.err = nil
+	a.Raise(created)
 }
 
-func (a *Aggregate[T]) Store(persistFunc func(AggregateState[T], EventPack, Version) error) error {
+func (a *Aggregate[T]) Store(persistFunc func(any, EventPack, Version) error) error {
 	a.checkError()
 	err := persistFunc(a.state, a.events, a.version)
 	if err != nil {
@@ -122,7 +124,7 @@ func (a *Aggregate[T]) Store(persistFunc func(AggregateState[T], EventPack, Vers
 	return nil
 }
 
-func (a *Aggregate[TState]) Restore(id AggregateId, state AggregateState[TState], version Version) {
+func (a *Aggregate[TState]) Restore(id AggregateId, state any, version Version) {
 	a.id = id
 	s := state.(TState)
 	a.state = s
@@ -144,6 +146,28 @@ type IAggregate[TState any] interface {
 	Id() AggregateId
 	Version() Version
 	Error() error
-	Store(persistFunc func(AggregateState[TState], EventPack, Version) error) error
-	Restore(id AggregateId, state AggregateState[TState], version Version)
+	Store(persistFunc func(Applier, EventPack, Version) error) error
+	Restore(id AggregateId, state Applier, version Version)
+}
+
+type EventRiser interface {
+	Raise(event Event)
+}
+
+func RaisePack(er EventRiser, pack EventPack) {
+	for _, e := range pack {
+		er.Raise(e)
+	}
+}
+
+func RaiseNotEqual(er EventRiser, first any, second any, event Event) {
+	if !cmp.Equal(first, second) {
+		er.Raise(event)
+	}
+}
+
+func RaiseTrue(er EventRiser, predicate bool, event Event) {
+	if predicate {
+		er.Raise(event)
+	}
 }
