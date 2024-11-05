@@ -13,11 +13,15 @@ var (
 )
 
 type (
+	State     any
 	Event     any
 	EventPack []Event
 	Id        string
 	Version   uint64
 )
+
+type Tomstone struct {
+}
 
 type EventRiser interface {
 	Raise(event Event)
@@ -31,46 +35,46 @@ type EventApplier interface {
 }
 
 type Storer interface {
-	Store(persistFunc func(id Id, state any, events EventPack, version Version) error) error
+	Store(persistFunc func(id Id, state State, events EventPack, version Version) error) error
 }
 
 type Restorer interface {
-	Restore(id Id, state any, version Version)
+	Restore(id Id, state State, version Version)
 }
 
-type riser[T any] struct {
+type raiser[T State] struct {
 	a *Aggregate[T]
 }
 
-func (r *riser[T]) Raise(event Event) {
+func (r *raiser[T]) Raise(event Event) {
 	r.a.raise(event)
 }
 
-func (r *riser[T]) RaisePack(pack EventPack) {
+func (r *raiser[T]) RaisePack(pack EventPack) {
 	for _, e := range pack {
 		r.Raise(e)
 	}
 }
 
-func (r *riser[T]) RaiseNotEqual(first any, second any, event Event) {
+func (r *raiser[T]) RaiseNotEqual(first any, second any, event Event) {
 	if !cmp.Equal(first, second) {
 		r.Raise(event)
 	}
 }
 
-func (r *riser[T]) RaiseTrue(predicate bool, event Event) {
+func (r *raiser[T]) RaiseTrue(predicate bool, event Event) {
 	if predicate {
 		r.Raise(event)
 	}
 }
 
-type Aggregate[T any] struct {
+type Aggregate[T State] struct {
 	id      Id
 	version Version
 	events  EventPack
 	state   T
 	err     error
-	riser   riser[T]
+	raiser  raiser[T]
 }
 
 func (a *Aggregate[T]) checkError() {
@@ -87,12 +91,13 @@ func (a *Aggregate[T]) raise(event Event) {
 func (a *Aggregate[T]) ProcessCommand(handler func(state *T, er EventRiser) error) (EventPack, error) {
 	a.checkError()
 	eventsCount := len(a.events)
-	a.riser = riser[T]{a}
-	err := handler(&a.state, &a.riser)
+	// this trick removes heap allocation for the raiser struct
+	a.raiser = raiser[T]{a}
+	err := handler(&a.state, &a.raiser)
 	if err == nil {
 		return a.events[eventsCount:], nil
 	}
-	// If an error occur after command has spawned any events
+	// if an error occur after command has spawned any events
 	// then the  aggregate is considered in corrupted state and can't be used anymore
 	if eventsCount == len(a.events) {
 		return nil, err
@@ -125,7 +130,14 @@ func (a *Aggregate[T]) Initialize(id Id, created Event) {
 	a.raise(created)
 }
 
-func (a *Aggregate[T]) Store(persistFunc func(Id, any, EventPack, Version) error) error {
+func (a *Aggregate[T]) Remove() (EventPack, error) {
+	return a.ProcessCommand(func(_ *T, er EventRiser) error {
+		er.Raise(Tomstone{})
+		return nil
+	})
+}
+
+func (a *Aggregate[T]) Store(persistFunc func(Id, State, EventPack, Version) error) error {
 	a.checkError()
 	if len(a.events) == 0 {
 		return nil
@@ -139,7 +151,7 @@ func (a *Aggregate[T]) Store(persistFunc func(Id, any, EventPack, Version) error
 	return nil
 }
 
-func (a *Aggregate[TState]) Restore(id Id, state any, version Version) {
+func (a *Aggregate[TState]) Restore(id Id, state State, version Version) {
 	a.id = id
 	a.state = state.(TState)
 	a.version = version

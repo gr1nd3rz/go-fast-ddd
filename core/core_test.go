@@ -21,6 +21,7 @@ type testAggState struct {
 	MyString string
 	MySlice  []nestedEntity
 	MyMap    map[string]nestedEntity
+	Removed  bool
 }
 
 func newTestAgg(id Id) testAgg {
@@ -43,6 +44,8 @@ func (t *testAggState) Apply(event Event) {
 		t.MyString = "created"
 	case ValueUpdated:
 		t.MyString = e.value
+	case Tomstone:
+		t.Removed = true
 	default:
 		PanicUnsupportedEvent(event)
 	}
@@ -78,6 +81,18 @@ func (t *testAgg) MultipleEventsCommand(val string) (EventPack, error) {
 }
 
 func TestAggregate(t *testing.T) {
+	t.Run(`Given an aggregate
+		When Remove is called
+		Then Tombstone event is produced
+		And state Removed set to true
+	`, func(t *testing.T) {
+		agg := newTestAgg("id")
+		pack, err := agg.Remove()
+		require.NoError(t, err)
+		require.Equal(t, EventPack{Tomstone{}}, pack)
+		require.True(t, agg.State().Removed)
+	})
+
 	t.Run(`Given aggreate with non-zero version
 			And with non-empty state
 			And events are not empty
@@ -149,10 +164,10 @@ func TestAggregate(t *testing.T) {
 		And cleanup events
 	`, func(t *testing.T) {
 		agg := newTestAgg("id")
-		var pState any
+		var pState State
 		var pEventPack EventPack
 		var pVersion Version
-		err := agg.Store(func(id Id, as any, ep EventPack, v Version) error {
+		err := agg.Store(func(id Id, as State, ep EventPack, v Version) error {
 			pState = as
 			pEventPack = ep
 			pVersion = v
@@ -174,7 +189,7 @@ func TestAggregate(t *testing.T) {
 	`, func(t *testing.T) {
 		agg := testAgg{}
 		persistFuncCalled := false
-		agg.Store(func(id Id, as any, ep EventPack, v Version) error {
+		agg.Store(func(id Id, as State, ep EventPack, v Version) error {
 			persistFuncCalled = true
 			return nil
 		})
@@ -188,7 +203,7 @@ func TestAggregate(t *testing.T) {
 		Then aggreate's state shouldn't be changed
 	`, func(t *testing.T) {
 		agg := newTestAgg("id")
-		err := agg.Store(func(id Id, as any, ep EventPack, v Version) error {
+		err := agg.Store(func(id Id, as State, ep EventPack, v Version) error {
 			return errors.New("error")
 		})
 		require.Error(t, err)
