@@ -20,6 +20,10 @@ type (
 	Version   uint64
 )
 
+func (v Version) Next() Version {
+	return v + 1
+}
+
 type Tomstone struct {
 }
 
