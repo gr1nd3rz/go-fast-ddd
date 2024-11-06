@@ -1,0 +1,1 @@
+docker_exec="docker exec -i db psql --username=test --dbname=db -v DB_SCHEMA=public"

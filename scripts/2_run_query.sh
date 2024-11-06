@@ -1,0 +1,1 @@
+echo "$@" | docker exec -i saca_postgres psql --username=saca --dbname=ddd-test

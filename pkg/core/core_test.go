@@ -24,10 +24,10 @@ type testAggState struct {
 	Removed  bool
 }
 
-func newTestAgg(id Id) testAgg {
+func newTestAgg(id Id) *testAgg {
 	agg := testAgg{}
 	agg.Initialize(id, Created{})
-	return agg
+	return &agg
 }
 
 type Created struct {
@@ -164,17 +164,17 @@ func TestAggregate(t *testing.T) {
 		And cleanup events
 	`, func(t *testing.T) {
 		agg := newTestAgg("id")
-		var pState State
+		var pState *testAggState
 		var pEventPack EventPack
 		var pVersion Version
-		err := agg.Store(func(id Id, as State, ep EventPack, v Version) error {
-			pState = as
+		err := agg.Store(func(id Id, as StatePtr, ep EventPack, v Version) error {
+			pState = as.(*testAggState)
 			pEventPack = ep
 			pVersion = v
 			return nil
 		})
 		require.NoError(t, err)
-		require.Equal(t, testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}, pState)
+		require.Equal(t, testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}, *pState)
 		require.Equal(t, EventPack{Created{}}, pEventPack)
 		require.Equal(t, Version(0), pVersion)
 		require.Empty(t, agg.events)
@@ -182,14 +182,14 @@ func TestAggregate(t *testing.T) {
 		require.Equal(t, testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}, agg.State())
 	})
 
-	t.Run(`Given an aggregate without events 
+	t.Run(`Given an aggregate without events
 		When Store is called
 		Then persistFunc shouldn't be called
 		And aggregate version shouldn'be be changed
 	`, func(t *testing.T) {
 		agg := testAgg{}
 		persistFuncCalled := false
-		agg.Store(func(id Id, as State, ep EventPack, v Version) error {
+		agg.Store(func(id Id, as StatePtr, ep EventPack, v Version) error {
 			persistFuncCalled = true
 			return nil
 		})
@@ -203,7 +203,7 @@ func TestAggregate(t *testing.T) {
 		Then aggreate's state shouldn't be changed
 	`, func(t *testing.T) {
 		agg := newTestAgg("id")
-		err := agg.Store(func(id Id, as State, ep EventPack, v Version) error {
+		err := agg.Store(func(id Id, as StatePtr, ep EventPack, v Version) error {
 			return errors.New("error")
 		})
 		require.Error(t, err)
@@ -213,13 +213,17 @@ func TestAggregate(t *testing.T) {
 	})
 
 	t.Run(`Given an empty aggregate
-		When Restore is called
-		Then aggreate's state is restored from parmas of Restore
-	`, func(t *testing.T) {
+			When Restore is called
+			Then aggreate's state is restored from parmas of Restore
+		`, func(t *testing.T) {
 		agg := testAgg{}
 		id := Id("id")
 		state := testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}
-		agg.Restore(id, state, Version(100))
+		agg.Restore(id, Version(100), func(state StatePtr) {
+			s := state.(*testAggState)
+			s.MyString = "created"
+			s.MySlice = make([]nestedEntity, 0)
+		})
 		require.Equal(t, state, agg.State())
 		require.Empty(t, agg.events)
 		require.Equal(t, Version(100), agg.version)
@@ -230,12 +234,17 @@ func TestAggregate(t *testing.T) {
 		When Restore is called
 		Then aggreate's state is restored from parmas of Restore
 		And Error is set to nil
-	`, func(t *testing.T) {
+	
+		`, func(t *testing.T) {
 		id := Id("id")
 		agg := newTestAgg("id2")
 		agg.err = errors.New("error")
 		state := testAggState{MyString: "created", MySlice: make([]nestedEntity, 0)}
-		agg.Restore(id, state, Version(100))
+		agg.Restore(id, Version(100), func(state StatePtr) {
+			s := state.(*testAggState)
+			s.MyString = "created"
+			s.MySlice = make([]nestedEntity, 0)
+		})
 		require.Equal(t, id, agg.Id())
 		require.Equal(t, state, agg.State())
 		require.Empty(t, agg.events)
@@ -244,10 +253,43 @@ func TestAggregate(t *testing.T) {
 	})
 }
 
+//go:noinline
+func Restore(r Restorer) {
+	r.Restore("id", 100, func(state StatePtr) {
+		s := state.(*testAggState)
+		s.MyString = "created"
+	})
+}
+
 func BenchmarkAggregate(b *testing.B) {
-	b.ReportAllocs()
-	agg := newTestAgg("id")
-	for i := 0; i < b.N; i++ {
-		agg.MultipleEventsCommand("val")
-	}
+
+	b.Run("command allocations", func(b *testing.B) {
+		b.ReportAllocs()
+		agg := newTestAgg("id")
+		for i := 0; i < b.N; i++ {
+			agg.MultipleEventsCommand("val")
+		}
+	})
+
+	b.Run("command restore allocations", func(b *testing.B) {
+		b.ReportAllocs()
+
+		agg := newTestAgg("id")
+		r := Restorer(agg)
+		for i := 0; i < b.N; i++ {
+			Restore(r)
+		}
+	})
+
+	b.Run("command store allocations", func(b *testing.B) {
+		b.ReportAllocs()
+		agg := newTestAgg("id")
+		for i := 0; i < b.N; i++ {
+			agg.Store(func(i Id, sp StatePtr, ep EventPack, v Version) error {
+				_ = sp.(*testAggState)
+				return nil
+			})
+		}
+	})
+
 }
